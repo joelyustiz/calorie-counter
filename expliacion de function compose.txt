@@ -1,0 +1,55 @@
+Tratando de explicar la función compose. Tenemos lo siguiente:
+
+La función compose está realizando una composición de funciones. Recordando la notación matemática, y teniendo en consideración las funciones f y g, vemos que la composición de estas es la siguiente (g º f)(x) = g(f(x)). Lo que quiere decir que el resultado de f(x) es pasado a la función g, y g regresa un valor.
+
+Después de esa breve teoría expliquemos el código la función compose. Tenemos que compose está definida de la siguiente forma:
+
+const compose = (...functions) => data => functions.reduceRight((value, func) => 
+func(value), data)
+Para hacer la lectura de compose más fácil, quitemos las arrow function, por lo que la función quedaría así:
+
+function compose(...functions) { // (*)
+  return function(data) { // (**)
+    return functions.reduceRight(function(value, func) { // (***)
+      return func(value)
+    }, data)
+  }
+}
+Y también recordemos la manera en como compose está siendo utilizada en el proyecto del curso, para entender la composición que se está realizando.:
+
+const tableRow = items => compose(tableRowTag, tableCells)(items);
+Empecemos por entender qué significa la sentencia …functions. Esa sentencia está haciendo uso de los rest parameters de JS. Los rest parameters pueden ser utilizados en la definición de una función con los “…”. Significan, literalmente, “reune los parámetros restantes en un array”. Por lo anterior, y por la forma en cómo está siendo aplicada la función compose, tenemos que:
+
+…functions va a generar el siguiente array, functions = [tableRowTag, tableCells], que va a poder se utilizado dentro de compose.
+
+En la línea (**) vemos que compose está regresando una función, cuyo parámetro es data, eso implica, que al momento de usar compose en nuestro proyecto se le esté pasando la variable items, de otra manera la funcionalidad de compose no se cumpliría por completo.
+
+compose(tableRowTag, tableCells)(items)
+En la línea (***), vemos que se está haciendo utilización de la función reduceRight en el array functions, y cuyo initialValue es data. reduceRight funciona de manera invesa a reduce, o sea que empieza a tomar valores de derecha a izquierda.
+
+Para la primera interación de reduceRight, se tienen los siguientes valores:
+
+value = data // pero data = [item.description, item.calories, item.carbs, item.protein, removeButton]
+func = tableCells
+Y cuya ejecución de código que realiza es:
+
+tableCells([item.description, item.calories, item.carbs, item.protein, removeButton])
+El resultado de la función anterior es un string, que va a tener la siguiente forma:
+
+"<td>description</td><td>calories</td><td>carbs</td><td>removeButton</td>"
+Para la segunda iteración de reduceRight, tenemos los siguientes valores:
+
+value = "<td>description</td><td>calories</td><td>carbs</td><td>removeButton</td>"
+func = tableRowTag
+La ejecución que realiza es:
+
+tableRowTag("<td>description</td><td>calories</td><td>carbs</td><td>removeButton</td>")
+Y función que realiza la función tableRowTag es agregar la etiqueta tr al elemento que se le pase como argumento.
+
+Por lo que el resultado de haber ejecutado la función compose de esta forma:
+
+compose(tableRowTag, tableCells)(items)
+Da como resultado:
+
+"<tr><td>description</td><td>calories</td><td>carbs</td><td>removeButton</td></tr>"
+Y esa cadena va a ser agregada al tbody de nuestro proyecto.
